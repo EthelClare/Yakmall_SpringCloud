@@ -28,6 +28,9 @@
 
     <dependencies>
 
+
+
+
         <!-- 新增校验依赖 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -52,11 +55,22 @@
         </dependency>
 
         <!-- 云原生依赖 -->
+        <!--nacos 服务注册发现-->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
         </dependency>
 
+        <!--nacos配置管理-->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+        </dependency>
+        <!--读取bootstrap文件-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-bootstrap</artifactId>
+        </dependency>
         <!-- 数据持久化 -->
         <dependency>
             <groupId>mysql</groupId>

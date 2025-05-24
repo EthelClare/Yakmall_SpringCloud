@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: trade-service
+  profiles:
+    active: new
+  cloud:
+    nacos:
+      server-addr: 192.168.64.9
+      config:
+        file-extension: yaml
+        shared-configs:
+          - dataId: shared-jdbc.yaml # 共享mybatis配置
+          - dataId: shared-log.yaml # 共享日志配置
+          - dataId: shared-springdoc.yaml # 共享日志配置
