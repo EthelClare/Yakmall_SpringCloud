@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yakmall.common.exception.BusinessException;
 import com.yakmall.common.result.Result;
 import com.yakmall.common.utils.BeanUtils;
-import com.yakmall.common.utils.UserContext;
 import com.yakmall.pay.domain.dto.PayApplyDTO;
 import com.yakmall.pay.domain.po.PayOrder;
 import com.yakmall.pay.mapper.PayMapper;
@@ -14,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
@@ -24,6 +24,8 @@ import java.time.LocalDateTime;
 public class PayServiceImpl extends ServiceImpl<PayMapper, PayOrder> implements IPayService {
 
     private final PayMapper payMapper;
+    private final HttpServletRequest request;
+
 
     @Override
     public Result<String> applyPayOrder(PayApplyDTO payApplyDTO) {
@@ -95,7 +97,9 @@ public class PayServiceImpl extends ServiceImpl<PayMapper, PayOrder> implements 
         //补充剩余系统字段
         payOrder.setCreateTime(LocalDateTime.now());
         payOrder.setUpdateTime(LocalDateTime.now());
-        Long userId = UserContext.getUser();
+//        Long userId = UserContext.getUser();
+        Long userId = Long.parseLong(request.getHeader("X-User-Id"));
+
         payOrder.setCreater(userId);
         payOrder.setUpdater(userId);
         payOrder.setBizUserId(userId);

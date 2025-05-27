@@ -17,7 +17,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 )
 @MapperScan("com.yakmall.user.mapper")
 @EnableConfigurationProperties()
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.yakmall.user",  "com.yakmall.common"})
 public class UserApplication {
     public static void main(String[] args) {
         SpringApplication.run(UserApplication.class, args);

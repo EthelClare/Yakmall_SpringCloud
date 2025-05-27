@@ -6,18 +6,17 @@ import com.yakmall.common.exception.BadRequestException;
 import com.yakmall.common.exception.ForbiddenException;
 import com.yakmall.common.exception.UserBadRequestException;
 import com.yakmall.common.result.Result;
-import com.yakmall.user.config.JwtProperties;
 import com.yakmall.user.domain.dto.LoginFormDTO;
 import com.yakmall.user.domain.dto.UserRegisterDTO;
 import com.yakmall.user.domain.po.UserBase;
 import com.yakmall.user.domain.vo.UserLoginVO;
 import com.yakmall.user.enums.UserStatus;
 import com.yakmall.user.mapper.UserMapper;
+import com.yakmall.user.poperties.UserJwtKeyProperties;
 import com.yakmall.user.service.IUserService;
-import com.yakmall.user.utils.JwtTool;
+import com.yakmall.user.util.UserJwtUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -34,16 +33,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserBase> implement
      */
     private final PasswordEncoder passwordEncoder;
 
-    private final JwtTool jwtTool;
+    private final UserJwtUtils jwtUtils;
 
-    private final JwtProperties jwtProperties;
+    private final UserJwtKeyProperties userJwtKeyProperties;
 
-    @Autowired
-    public UserServiceImpl(JwtProperties jwtProperties, JwtTool jwtTool, PasswordEncoder passwordEncoder) {
-        this.jwtProperties = jwtProperties;
-        this.jwtTool = jwtTool;
-        this.passwordEncoder = passwordEncoder;
-    }
 
 
     /**
@@ -72,7 +65,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserBase> implement
         }
 
         //5.生成token
-        String token = jwtTool.createJWT(user.getId(), jwtProperties.getTokenTTL());
+        String token = jwtUtils.generateToken(user.getId());
 
         //6.封装成一个VO返回
         UserLoginVO userLoginVO = new UserLoginVO();

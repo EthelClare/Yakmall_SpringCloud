@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yakmall.common.exception.BusinessException;
 import com.yakmall.common.result.Result;
 import com.yakmall.common.utils.BeanUtils;
-import com.yakmall.common.utils.UserContext;
 import com.yakmall.user.domain.dto.AddressDTO;
 import com.yakmall.user.domain.po.Address;
 import com.yakmall.user.mapper.AddressMapper;
@@ -15,16 +14,23 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.http.HttpServletRequest;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class AddressServiceImpl extends ServiceImpl<AddressMapper, Address> implements IAddressService {
+    private final HttpServletRequest request;
+
+
     @Override
     @Transactional
     public Result<Void> saveAddress(AddressDTO addressDTO) {
         //首先要进行校验
         validateAddressDTO(addressDTO);
-        Long userId = UserContext.getUser();
+//        Long userId = UserContext.getUser();
+        Long userId = Long.parseLong(request.getHeader("X-User-Id"));
+
         if(userId == null){
             log.info("获取当前用户失败");
             return null;

@@ -4,7 +4,6 @@ package com.yakmall.item.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yakmall.common.result.Result;
 import com.yakmall.common.utils.BeanUtils;
-import com.yakmall.common.utils.UserContext;
 import com.yakmall.item.domain.dto.ItemCreateDTO;
 import com.yakmall.item.domain.dto.ItemQueryDTO;
 import com.yakmall.item.domain.dto.ItemUpdateDTO;
@@ -18,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +29,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ItemController {
     private final IItemService itemService;
+    private final HttpServletRequest request;
 
 
     @Operation(
@@ -51,7 +52,7 @@ public class ItemController {
     @DeleteMapping("{id}")
     public Result<Void> removeById(@PathVariable String id) {
         try {
-            log.info("[删除操作] 操作人： {}, 删除ID ：{}", UserContext.getUser(), id);
+            log.info("[删除操作] 操作人： {}, 删除ID ：{}", Long.parseLong(request.getHeader("X-User-Id")), id);
             itemService.removeById(id);
             return Result.success();
         } catch (Exception e) {

@@ -4,7 +4,6 @@ package com.yakmall.user.controller;
 import com.yakmall.common.exception.ForbiddenException;
 import com.yakmall.common.result.Result;
 import com.yakmall.common.utils.BeanUtils;
-import com.yakmall.common.utils.UserContext;
 import com.yakmall.user.domain.dto.AddressDTO;
 import com.yakmall.user.domain.po.Address;
 import com.yakmall.user.service.IAddressService;
@@ -16,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -27,6 +27,7 @@ import java.util.List;
 public class AddressController {
 
     private final IAddressService addressService;
+    private final HttpServletRequest request;
 
 
 
@@ -38,7 +39,9 @@ public class AddressController {
         if(address == null){
             throw new NotFoundException("地址不存在");
         }
-        Long userId = UserContext.getUser();
+//        Long userId = UserContext.getUser();
+        Long userId = Long.parseLong(request.getHeader("X-User-Id"));
+
         if( !address.getUserId().equals(userId) ){
             throw new ForbiddenException("无权访问改地址");
         }
@@ -50,7 +53,9 @@ public class AddressController {
     @Operation(summary = "查询当前用户地址列表")
     @GetMapping
     public Result<List<AddressDTO>>  findMyAddresses() {
-        Long userId = UserContext.getUser();
+//        Long userId = UserContext.getUser();
+        Long userId = Long.parseLong(request.getHeader("X-User-Id"));
+
         List<Address> list = addressService.query().eq("user_id", userId).list();
         return Result.success(BeanUtils.copyList(list, AddressDTO.class)) ;
     }

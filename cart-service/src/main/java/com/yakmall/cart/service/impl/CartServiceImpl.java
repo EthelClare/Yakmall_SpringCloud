@@ -14,13 +14,13 @@ import com.yakmall.common.exception.BusinessException;
 import com.yakmall.common.result.Result;
 import com.yakmall.common.utils.BeanUtils;
 import com.yakmall.common.utils.CollUtils;
-import com.yakmall.common.utils.UserContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +40,7 @@ public class CartServiceImpl extends ServiceImpl<CarMapper, Cart> implements ICa
     private final ItemClient itemClient;
     private final CartProperties cartProperties;
 
+    private final HttpServletRequest request;
 
 
     @Override
@@ -50,7 +51,8 @@ public class CartServiceImpl extends ServiceImpl<CarMapper, Cart> implements ICa
             throw new IllegalArgumentException("商品参数不合法");
         }
         //1.获取登陆的用户
-        Long userId = UserContext.getUser();
+        Long userId = Long.parseLong(request.getHeader("X-User-Id"));
+//        Long userId = UserContext.getUser();
         log.debug("用户{}尝试添加商品{}到购物车", userId, cartFormDTO.getItemId());
         // 3.尝试直接更新数量（原子操作）
         int affectedRows = baseMapper.incrementNum(
@@ -90,7 +92,9 @@ public class CartServiceImpl extends ServiceImpl<CarMapper, Cart> implements ICa
     @Override
     public Result<List<CartVO>> queryMyCarts() {
         //使用用户id来查询
-        Long userId = UserContext.getUser();
+//        Long userId = UserContext.getUser();
+        Long userId = Long.parseLong(request.getHeader("X-User-Id"));
+
         List<Cart> carts = lambdaQuery().eq(Cart::getUserId, userId).list();
         if(CollUtils.isEmpty(carts)) {
             return Result.success(CollUtils.emptyList());

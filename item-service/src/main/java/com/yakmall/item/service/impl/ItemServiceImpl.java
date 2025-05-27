@@ -4,7 +4,6 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yakmall.common.result.Result;
 import com.yakmall.common.utils.BeanUtils;
-import com.yakmall.common.utils.UserContext;
 import com.yakmall.item.domain.dto.ItemCreateDTO;
 import com.yakmall.item.domain.dto.ItemQueryDTO;
 import com.yakmall.item.domain.dto.ItemUpdateDTO;
@@ -15,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -26,6 +26,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ItemServiceImpl extends ServiceImpl<ItemMapper, Item> implements IItemService {
 
+    private final HttpServletRequest request;
 
     private final ItemMapper itemMapper;
 
@@ -54,7 +55,8 @@ public class ItemServiceImpl extends ServiceImpl<ItemMapper, Item> implements II
         item.setStatus(1);
         item.setCreateTime(LocalDateTime.now());
         item.setUpdateTime(LocalDateTime.now());
-        Long userId = UserContext.getUser();
+        Long userId = Long.parseLong(request.getHeader("X-User-Id"));
+
         item.setCreateUser(userId);
         item.setUpdateUser(userId);
 
@@ -93,10 +95,12 @@ public class ItemServiceImpl extends ServiceImpl<ItemMapper, Item> implements II
 
         Item item = new Item();
         BeanUtils.copyProperties(itemUpdateDTO, item);
-        item.setUpdateUser(UserContext.getUser());
+        Long userId = Long.parseLong(request.getHeader("X-User-Id"));
+
+        item.setUpdateUser(userId);
 
         updateById(item);
-        log.info("[更新操作] 操作人： {}, 更新ID ：{}", UserContext.getUser(), item.getId());
+        log.info("[更新操作] 操作人： {}, 更新ID ：{}", userId, item.getId());
 
         return Result.success().msg("更新成功");
     }

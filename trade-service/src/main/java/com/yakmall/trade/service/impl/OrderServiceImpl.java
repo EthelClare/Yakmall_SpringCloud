@@ -7,7 +7,6 @@ import com.yakmall.api.dto.ItemQueryDTO;
 import com.yakmall.common.exception.BadRequestException;
 import com.yakmall.common.exception.BusinessException;
 import com.yakmall.common.result.Result;
-import com.yakmall.common.utils.UserContext;
 import com.yakmall.trade.domain.dto.OrderDetailDTO;
 import com.yakmall.trade.domain.dto.OrderFormDTO;
 import com.yakmall.trade.domain.po.Order;
@@ -19,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,8 +37,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     private final IOrderDetailService orderDetailService;
 //    private final ICarService carService;
     private final CartClient cartClient;
-
     private final OrderMapper orderMapper;
+    private final HttpServletRequest request;
 
 
     //TODO 这里已经实现了基本的创建订单，但是还有一些问题，包括【商品库存扣了，但是商品的sold字段没有更新，更新时间没变】
@@ -74,7 +74,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         //6.sql执行
 //        asyncCleanCart(UserContext.getUser(), itemNumMap.keySet());
 //        carService.cleanCartItems(UserContext.getUser(), itemNumMap.keySet());
-        cartClient.cleanUserCartItems(UserContext.getUser(), itemNumMap.keySet());
+        cartClient.cleanUserCartItems(Long.parseLong(request.getHeader("X-User-Id")), itemNumMap.keySet());
         return Result.success(order.getId());
     }
 
@@ -116,7 +116,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      */
     private Order buildOrder(OrderFormDTO form, Integer totalAmount) {
         return Order.builder()
-                .userId(UserContext.getUser())
+                .userId(Long.parseLong(request.getHeader("X-User-Id")))
                 .totalAmount(totalAmount)
                 .status(1)
                 .createTime(LocalDateTime.now())

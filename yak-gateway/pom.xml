@@ -27,6 +27,14 @@
 
 
     <dependencies>
+
+        <!-- Spring Security -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+
         <!-- 自定义通用模块 -->
         <dependency>
             <groupId>com.yak.yakmall</groupId>

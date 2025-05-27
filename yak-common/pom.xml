@@ -33,10 +33,51 @@
         <xiaoymin.version>4.1.0</xiaoymin.version>
         <lombok.version>1.18.20</lombok.version>
         <hutool.version>5.8.11</hutool.version>
+        <mybatis-plus.version>3.4.3</mybatis-plus.version>
     </properties>
 
 
     <dependencies>
+
+        <!-- JJWT 依赖 -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.11.5</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.11.5</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.11.5</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Redis -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-core</artifactId>
+            <version>${mybatis-plus.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-extension</artifactId>
+            <version>${mybatis-plus.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
 
         <!-- 添加新版 SpringDoc + Knife4j -->
         <dependency>
@@ -44,6 +85,13 @@
             <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
             <version>4.3.0</version>
         </dependency>
+<!--        &lt;!&ndash;  tomcat相关依赖      &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.tomcat.embed</groupId>-->
+<!--            <artifactId>tomcat-embed-core</artifactId>-->
+<!--            <version>9.0.73</version>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
 
         <!-- Lombok -->
         <dependency>
