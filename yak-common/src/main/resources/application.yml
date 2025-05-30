@@ -1,24 +1,9 @@
-server:
-  port: 8080
 jwt:
   key:
     key-location: yak-common.jks  # 去掉 `classpath:` 前缀
     alias: yakmall
     key-pass: yakmall123          # 密钥密码
     store-pass: yakmall123        # 存储密码
-spring:
-  redis:
-    host: 192.168.64.9
-    port: 6379
-    password: captain001
-    database: 0
-logging:
-  level:
-    com.yak.gateway.filter.JwtAuthFilter: DEBUG
-
-
-
-
 
 #  jwt:
 #    location: classpath:yak-common.jks

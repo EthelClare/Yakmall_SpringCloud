@@ -1,62 +1,15 @@
 server:
   port: 8082
-spring:
-  application:
-    name: user-service
-  profiles:
-#    active: dev
-    active: new
-  cloud:
-    nacos:
-      server-addr: 192.168.64.9:8848 # nacos地址
-  datasource:
-    url: jdbc:mysql://${yak.db.host}:3306/yakmall?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai&allowMultiQueries=true
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: ${yak.db.pw}
-  mvc:
-    pathmatch:
-      matching-strategy: ant_path_matcher  # 关键修复
-
-mybatis-plus:
-#  这里配置了mapper.xml文件的位置
-  mapper-locations: classpath*:/mapper/**/*.xml
-  configuration:
-    default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
-    map-underscore-to-camel-case: true # 新增关键配置（开启驼峰转换）
-  type-aliases-package: com.yakmall.domain.po
-  global-config:
-    db-config:
-      update-strategy: not_null
-      id-type: auto
-logging:
-  level:
-    com.yakmall: debug
-  pattern:
-    dateformat: HH:mm:ss:SSS
-  file:
-    path: "logs/${spring.application.name}"
-springdoc:
-  swagger-ui:
-    path: /swagger-ui.html      # 原生UI路径
-    tags-sorter: alpha          # 标签排序规则
-    operations-sorter: alpha     # 接口排序规则
-  api-docs:
-    path: /v3/api-docs          # OpenAPI描述文件路径
-  packages-to-scan: com.yakmall.user.controller  # 扫描的Controller包路径
-  knife4j:
-    enable: true                # 启用Knife4j增强
-    setting:
-      language: zh-CN           # 中文界面
-      enable-swagger-model: true
-      enable-document-manage: true
-
+feign:
+  okhttp:
+    enabled: true # 开启OKHttp连接池支持
 yak:
-  jwt:
-    location: classpath:yak-common.jks
+  springdoc:
+    package: com.yakmall.user.controller
+jwt:
+  key:
+    key-location: yak-common.jks  # 去掉 `classpath:` 前缀
     alias: yakmall
-    password: yakmall123
-    tokenTTL: 30d
-  auth:
-    excludePaths: /api/public,/login,/v3/api-docs,/swagger-ui/**,/doc.html
-# keytool -genkeypair -alias hmall -keyalg RSA -keypass hmall123 -keystore hmall.jks -storepass hmall123
+    key-pass: yakmall123          # 密钥密码
+    store-pass: yakmall123        # 存储密码
+

@@ -1,0 +1,4 @@
+yak:
+  db:
+    host: localhost
+    pw: SHIYU001
