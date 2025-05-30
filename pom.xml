@@ -15,6 +15,7 @@
     <!-- 模块列表 -->
     <modules>
         <module>item-service</module>
+        <module>user-service</module>
         <module>yak-common</module>
         <module>yak-gateway</module>
         <module>trade-service</module>

@@ -4,13 +4,14 @@ package com.yakmall.cart.domain.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
 
 @Schema(description = "购物车VO实体")
 
-public class CartVO {
+public class CartVO implements Serializable {
     @Schema(description = "购物车条目id ")
     private Long id;
     @Schema(description = "sku商品id")

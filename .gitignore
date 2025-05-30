@@ -36,3 +36,14 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+
+### 添加自定义忽略规则 ###
+# 忽略所有 application.yml 文件
+**/application.yml
+
+# 忽略所有 bootstrap.yaml 文件
+**/bootstrap.yaml
+
+# 忽略所有 yak-common.jks 文件
+**/yak-common.jks

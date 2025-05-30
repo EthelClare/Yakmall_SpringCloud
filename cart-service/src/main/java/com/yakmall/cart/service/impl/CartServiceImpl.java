@@ -17,18 +17,19 @@ import com.yakmall.common.utils.CollUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.yakmall.cart.utils.CartRedisConstants.CART_CACHE_KEY_PREFIX;
+import static com.yakmall.cart.utils.CartRedisConstants.EMPTY_CACHE_TTL_MINUTES;
 
 
 @Service
@@ -39,6 +40,8 @@ public class CartServiceImpl extends ServiceImpl<CarMapper, Cart> implements ICa
     private final CarMapper cartMapper;
     private final ItemClient itemClient;
     private final CartProperties cartProperties;
+    private final RedisTemplate redisTemplate;
+
 
     private final HttpServletRequest request;
 
@@ -52,7 +55,7 @@ public class CartServiceImpl extends ServiceImpl<CarMapper, Cart> implements ICa
         }
         //1.获取登陆的用户
         Long userId = Long.parseLong(request.getHeader("X-User-Id"));
-//        Long userId = UserContext.getUser();
+
         log.debug("用户{}尝试添加商品{}到购物车", userId, cartFormDTO.getItemId());
         // 3.尝试直接更新数量（原子操作）
         int affectedRows = baseMapper.incrementNum(
@@ -71,14 +74,19 @@ public class CartServiceImpl extends ServiceImpl<CarMapper, Cart> implements ICa
             cart.setCreateTime(cart.getCreateTime());
             cart.setUpdateTime(cart.getUpdateTime());
             save(cart);
+            clearCartCache(userId);
             log.info("用户{}购物车新增商品{}", userId, cart.getId());
             return null;
         }
+        clearCartCache(userId);
         return null;
     }
 
+
     @Override
     public Result<CartUpdateDTO> updateCart(CartUpdateDTO cartUpdateDTO) {
+        Long userId = Long.parseLong(request.getHeader("X-User-Id"));
+
         //添加校验
         if(cartUpdateDTO.getItemId() == null && cartUpdateDTO.getNum() > 0) {
             throw new IllegalArgumentException("商品参数不合法");
@@ -86,25 +94,97 @@ public class CartServiceImpl extends ServiceImpl<CarMapper, Cart> implements ICa
         Cart cart = BeanUtils.copyBean(cartUpdateDTO, Cart.class);
         cart.setUpdateTime(LocalDateTime.now());
         updateById(cart);
+
+        //这里需要添加清除缓存
+        clearCartCache(userId);
         return Result.success(cartUpdateDTO);
     }
 
+
+    //optimize 购物车也加入查询缓存
     @Override
     public Result<List<CartVO>> queryMyCarts() {
         //使用用户id来查询
-//        Long userId = UserContext.getUser();
         Long userId = Long.parseLong(request.getHeader("X-User-Id"));
 
-        List<Cart> carts = lambdaQuery().eq(Cart::getUserId, userId).list();
-        if(CollUtils.isEmpty(carts)) {
-            return Result.success(CollUtils.emptyList());
+        //cart:user:id
+        String cacheCartKey  =  CART_CACHE_KEY_PREFIX + userId;
+
+        // 首先尝试从缓存中获取
+        List<CartVO> cacheResult = getCartsFromCache(cacheCartKey);
+        if(cacheResult != null) {
+            return Result.success(cacheResult);
         }
+
+        //缓存未命中，查询数据库
+        List<Cart> carts = lambdaQuery().eq(Cart::getUserId, userId).list();
+
+        //缓存空结果，防止缓存穿透
+        if(CollUtils.isEmpty(carts)) {
+            cacheEmptyResult(cacheCartKey);
+            return Result.success(Collections.emptyList());
+        }
+
         //封装成VO
         List<CartVO> vos = BeanUtils.copyList(carts, CartVO.class);
         handleCartItems(vos);
+
+        //缓存查询结果
+        cacheCartResult(cacheCartKey, vos);
+
         return Result.success(vos);
 
     }
+
+    // 缓存查询结果
+    private void cacheCartResult(String cacheCartKey, List<CartVO> carts) {
+        try {
+            redisTemplate.opsForValue().set(cacheCartKey, carts);
+        } catch (Exception e) {
+            log.error("缓存购物车数据失败， key:{}", cacheCartKey, e);
+        }
+    }
+
+    // 清空购物车缓存
+    private void clearCartCache(Long userId) {
+        try {
+            redisTemplate.delete(CART_CACHE_KEY_PREFIX + userId);
+        } catch (Exception e) {
+            log.error("清除购物车失败， key:{}", userId, e);
+        }
+    }
+
+
+    // 缓存空结果（防止缓存穿透）
+    private void cacheEmptyResult(String cacheCartKey) {
+        try{
+            redisTemplate.opsForValue().set(
+                    cacheCartKey,
+                    CollUtils.emptyList(),
+                    EMPTY_CACHE_TTL_MINUTES,
+                    TimeUnit.MINUTES
+            );
+        }catch (Exception e) {
+            log.error("缓存空购物车失败, key: {}", cacheCartKey, e);
+        }
+
+    }
+
+    //从缓冲中获取购物车数据
+    private List<CartVO> getCartsFromCache(String cacheCartKey) {
+
+        try {
+            Object cached = redisTemplate.opsForValue().get(cacheCartKey);
+            if(cached instanceof List) {
+                return (List<CartVO>) cached;
+            }
+        } catch (Exception e) {
+            log.error("获取购物车缓存失败， key: {}", cacheCartKey, e);
+        }
+
+        return null;
+    }
+
 
     private void handleCartItems(List<CartVO> vos) {
         // 1. 提取商品ID并去重[这里是通过使用 Set中不能包含重复的元素来完成的去重的功能]
@@ -115,15 +195,10 @@ public class CartServiceImpl extends ServiceImpl<CarMapper, Cart> implements ICa
             return; // 避免无意义查询
         }
 
-
         // 2. 将 Set<Long> 转换为 List<Long>
         List<Long> itemIdList = new ArrayList<>(itemIds);
         // 2. 批量查询商品信息
-
         List<ItemQueryDTO> items = itemClient.getItems(itemIdList).getData();
-
-
-//        List<ItemQueryDTO> items = itemService.queryItemByIds(itemIdList).getData();
         Map<Long, ItemQueryDTO> itemMap = CollUtils.isEmpty(itemIdList)
                 ? Map.of()
                 : items.stream().collect(Collectors.toMap(ItemQueryDTO::getId, Function.identity()));

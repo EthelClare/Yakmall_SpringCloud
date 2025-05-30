@@ -12,13 +12,18 @@ import com.yakmall.item.mapper.ItemMapper;
 import com.yakmall.item.service.IItemService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import static com.yakmall.item.utils.ItemRedisConstants.CACHE_EXPIRE_MINUTES;
+import static com.yakmall.item.utils.ItemRedisConstants.ITEM_CACHE_PREFIX;
 
 
 @Service
@@ -29,6 +34,7 @@ public class ItemServiceImpl extends ServiceImpl<ItemMapper, Item> implements II
     private final HttpServletRequest request;
 
     private final ItemMapper itemMapper;
+    private final RedisTemplate<Object, Object> redisTemplate;
 
     @Override
     public Result<Void> createItem(ItemCreateDTO itemDTO) {
@@ -112,7 +118,31 @@ public class ItemServiceImpl extends ServiceImpl<ItemMapper, Item> implements II
      */
     @Override
     public Result<List<ItemQueryDTO>> queryItemByIds(Collection<Long> ids) {
-        return Result.success(BeanUtils.copyList(listByIds(ids), ItemQueryDTO.class));
+        //optimize优化成redis缓存
+        //TODO 这里数据里放的是Item，但是我最后返回的结果只能是ItemQueryDTO
+        //尝试从redis中去获取
+        List<Item> cachedItems = getItemsFromCache(ids);
+
+        //找出未命中的商品
+        Set<Long> missedIds = findMissedIds(ids, cachedItems);
+
+        //从数据库中去获取未命中的商品
+        List<Item> dbItems = Collections.emptyList();
+        if(!missedIds.isEmpty()) {
+            dbItems = itemMapper.selectBatchIds(missedIds);
+            //同时将数据库的查询结果存入缓存
+            cacheItems(dbItems);
+        }
+
+        //合并缓存和数据库返回结果
+        List<Item> allItems = new ArrayList<>(cachedItems);
+        allItems.addAll(dbItems);
+
+
+        // 转换为DTO并返回
+        List<ItemQueryDTO> resultList = BeanUtils.copyList(allItems, ItemQueryDTO.class);
+
+        return Result.success(resultList);
     }
 
     @Override
@@ -128,4 +158,52 @@ public class ItemServiceImpl extends ServiceImpl<ItemMapper, Item> implements II
         // 实现名称特殊字符校验逻辑
         return name.matches(".*[\\\\/<>].*");
     }
+
+    /**
+     * 从缓存中获取商品信息
+     * @return
+     */
+    private List<Item> getItemsFromCache(Collection<Long> ids){
+        //构建缓存key列表
+        List<String> keys = ids.stream()
+                .map(id -> ITEM_CACHE_PREFIX + id)
+                .collect(Collectors.toList());
+
+        //批量获取缓存
+        List<Object> cachedItems = redisTemplate.opsForValue().multiGet(Collections.singleton(keys));
+        //断言处理
+        assert cachedItems != null;
+        //过滤有效结果
+        return cachedItems.stream()
+                .filter(Objects::nonNull)
+                .map(obj ->(Item) obj)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 找到未命中的商品id
+     *
+     * @param ids
+     * @param cacheItems
+     * @return
+     */
+    private Set<Long> findMissedIds(Collection<Long> ids, List<Item> cacheItems) {
+        Set<Long> cacheIds = cacheItems.stream()
+                .map(Item::getId)
+                .collect(Collectors.toSet());
+        return ids.stream()
+                .filter(id -> !cacheIds.contains(id))
+                .collect(Collectors.toSet());
+    }
+
+
+    private void cacheItems(List<Item> items) {
+        items.forEach(item -> {
+            if(item != null) {
+                String key = ITEM_CACHE_PREFIX + item.getId();
+                redisTemplate.opsForValue().set(key, item, CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES);
+            }
+        });
+    }
+
 }

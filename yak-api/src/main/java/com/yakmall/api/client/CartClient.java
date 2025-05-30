@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.validation.constraints.NotNull;
@@ -25,6 +26,6 @@ public interface CartClient {
 
     @Schema(description = "清空购物车")
     @DeleteMapping("/cars")
-    public Result<Void> cleanUserCartItems(@RequestParam @NotNull(message = "用户ID不能为空") Long userId,
-                                           @RequestParam @NotNull(message = "商品ID集合不能为空") Set<Long> itemIds);
+    public Result<Void> cleanUserCartItems(@RequestParam("userId") @NotNull(message = "用户ID不能为空") Long userId,
+                                           @RequestBody @NotNull(message = "商品ID集合不能为空") Set<Long> itemIds);
 }
