@@ -15,7 +15,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
         )
 )
 @MapperScan("com.yakmall.pay.mapper")
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.yakmall.pay" ,"com.yakmall.common.aop"})
 public class PayApplication {
     public static void main(String[] args) {
         SpringApplication.run(PayApplication.class, args);

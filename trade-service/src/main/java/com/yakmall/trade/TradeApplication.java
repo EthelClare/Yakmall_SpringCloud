@@ -20,7 +20,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @MapperScan("com.yakmall.trade.mapper")
 @EnableFeignClients(basePackages = "com.yakmall.api.client", defaultConfiguration = DefaultFeignConfig.class)
 @EnableConfigurationProperties()
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.yakmall.trade" ,"com.yakmall.common.aop"})
 public class TradeApplication {
     public static void main(String[] args) {
         SpringApplication.run(TradeApplication.class, args);

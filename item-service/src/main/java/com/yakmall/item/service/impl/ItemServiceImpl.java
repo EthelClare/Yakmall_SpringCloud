@@ -138,7 +138,6 @@ public class ItemServiceImpl extends ServiceImpl<ItemMapper, Item> implements II
         List<Item> allItems = new ArrayList<>(cachedItems);
         allItems.addAll(dbItems);
 
-
         // 转换为DTO并返回
         List<ItemQueryDTO> resultList = BeanUtils.copyList(allItems, ItemQueryDTO.class);
 
@@ -165,12 +164,12 @@ public class ItemServiceImpl extends ServiceImpl<ItemMapper, Item> implements II
      */
     private List<Item> getItemsFromCache(Collection<Long> ids){
         //构建缓存key列表
-        List<String> keys = ids.stream()
-                .map(id -> ITEM_CACHE_PREFIX + id)
+        Collection<Object> keys = ids.stream()
+                .map(id -> (Object)( ITEM_CACHE_PREFIX + id))
                 .collect(Collectors.toList());
 
         //批量获取缓存
-        List<Object> cachedItems = redisTemplate.opsForValue().multiGet(Collections.singleton(keys));
+        List<Object> cachedItems = redisTemplate.opsForValue().multiGet(keys);
         //断言处理
         assert cachedItems != null;
         //过滤有效结果

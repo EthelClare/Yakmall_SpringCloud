@@ -42,6 +42,7 @@
         <dependency>
             <groupId>com.yak.yakmall</groupId>
             <artifactId>yak-common</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <!-- Spring Boot基础依赖 -->

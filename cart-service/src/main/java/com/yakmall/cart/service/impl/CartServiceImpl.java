@@ -16,6 +16,7 @@ import com.yakmall.common.utils.BeanUtils;
 import com.yakmall.common.utils.CollUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.actuate.logging.LoggersEndpoint;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.mysql.cj.conf.PropertyKey.logger;
 import static com.yakmall.cart.utils.CartRedisConstants.CART_CACHE_KEY_PREFIX;
 import static com.yakmall.cart.utils.CartRedisConstants.EMPTY_CACHE_TTL_MINUTES;
 
@@ -44,6 +46,7 @@ public class CartServiceImpl extends ServiceImpl<CarMapper, Cart> implements ICa
 
 
     private final HttpServletRequest request;
+    private final LoggersEndpoint loggersEndpoint;
 
 
     @Override
@@ -113,6 +116,7 @@ public class CartServiceImpl extends ServiceImpl<CarMapper, Cart> implements ICa
         // 首先尝试从缓存中获取
         List<CartVO> cacheResult = getCartsFromCache(cacheCartKey);
         if(cacheResult != null) {
+            log.debug("Redis 缓存命中- 用户id：{}, key： {}", userId, cacheCartKey);
             return Result.success(cacheResult);
         }
 

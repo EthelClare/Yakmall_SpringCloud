@@ -18,7 +18,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 )
 @EnableFeignClients(basePackages = "com.yakmall.api.client", defaultConfiguration = DefaultFeignConfig.class)
 @MapperScan("com.yakmall.cart.mapper")
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.yakmall.cart" ,"com.yakmall.common.aop"})
 public class CartApplication {
     public static void main(String[] args) {
         SpringApplication.run(CartApplication.class, args);

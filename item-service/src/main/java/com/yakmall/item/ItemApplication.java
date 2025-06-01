@@ -15,7 +15,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
         )
 )
 @MapperScan("com.yakmall.item.mapper")
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.yakmall.item" ,"com.yakmall.common.aop"})
 public class ItemApplication {
     public static void main(String[] args) {
         SpringApplication.run(ItemApplication.class, args);

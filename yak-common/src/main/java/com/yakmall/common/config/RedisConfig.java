@@ -23,7 +23,6 @@ import java.time.Duration;
 @Configuration
 public class RedisConfig {
 
-
     //optimize 由于这个类放在了没有common模块下面，没有启动器，所以导致必须手动定义RedisConnectionFactory
 
     @Value("${spring.redis.host}")
